@@ -42,14 +42,15 @@ def create_app():
     description='A simple Flask Blog API with Swagger documentation',
     doc='/docs')  # Swagger UI available at /docs
 
-    # Register Google OAuth blueprint
+ # Set up and register the Google OAuth blueprint
     google_bp = make_google_blueprint(
         client_id=os.environ.get("GOOGLE_CLIENT_ID"),
         client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
-        redirect_to='auth.login',
-        scope=["profile", "email"]
+        redirect_to='google.authorized',  # Redirect to the function handling post-auth
+        scope=["profile", "email"],
     )
-    app.register_blueprint(google_bp, url_prefix="/login")
+    app.register_blueprint(google_bp, url_prefix="/auth")
+
 
     # Register namespaces
     from app.routes.auth import api as auth_ns

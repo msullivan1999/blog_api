@@ -1,19 +1,11 @@
-from flask import redirect, url_for, session
+from flask import redirect, url_for, session, jsonify
 from flask_restx import Namespace, Resource
-from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.contrib.google import google
 from app.models import db, User
 from sqlalchemy.exc import IntegrityError
 
 # Set up the Namespace for authentication
 api = Namespace('auth', description='Authentication operations using Google OAuth')
-
-# Google OAuth blueprint (should be registered separately in app/__init__.py)
-google_bp = make_google_blueprint(
-    client_id='your-client-id',
-    client_secret='your-client-secret',
-    redirect_to='auth.login',
-    scope=["profile", "email"]
-)
 
 @api.route("/login")
 class Login(Resource):
@@ -24,18 +16,28 @@ class Login(Resource):
         Redirects to Google login if not authorized.
         """
         if not google.authorized:
+            # Make sure this route name matches how the Google blueprint is registered
             return redirect(url_for("google.login"))
 
+        # Fetch user info from Google
         resp = google.get("/oauth2/v1/userinfo")
+        print("yay got here!")
+        if not resp or not resp.ok:
+            return {"error": "Failed to fetch user info from Google"}, 400
+
         user_info = resp.json()
-        email = user_info["email"]
-        google_id = user_info["id"]
+        email = user_info.get("email")
+        google_id = user_info.get("id")
+
+        # Ensure email and google_id are present in the response
+        if not email or not google_id:
+            return {"error": "Incomplete user information from Google"}, 400
 
         user = User.query.filter_by(google_id=google_id).first()
         if not user:
             # Create a new user if one does not exist
             try:
-                user = User(name=user_info["name"], email=email, google_id=google_id)
+                user = User(name=user_info.get("name"), email=email, google_id=google_id)
                 db.session.add(user)
                 db.session.commit()
             except IntegrityError:
@@ -43,7 +45,7 @@ class Login(Resource):
                 return {"error": "An error occurred when trying to create a user"}, 400
 
         session["user_id"] = user.id
-        return redirect(url_for("users.get_users"))
+        return redirect(url_for("users.get_users"))  # Make sure this matches your users route setup
 
 @api.route("/logout")
 class Logout(Resource):
