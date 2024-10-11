@@ -13,9 +13,16 @@ db_user = os.environ.get('DB_USER', 'default_user')  # Default to 'default_user'
 db_password = os.environ.get('DB_PASSWORD', 'default_password')
 db_host = os.environ.get('DB_HOST', 'localhost')  # Replace 'localhost' with your default host if needed
 db_name = os.environ.get('DB_NAME', 'default_db')
+unix_socket_path = os.environ.get("INSTANCE_UNIX_SOCKET")
 
-# Configuring SQLAlchemy with MySQL connection using PyMySQL
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
+# Check if we are running in a Google Cloud environment with Unix socket
+if unix_socket_path:
+    # Use Unix socket connection
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@/{db_name}?unix_socket={unix_socket_path}'
+else:
+    # Fallback to TCP connection
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable Flask-SQLAlchemy event system
 
 # Initialize the SQLAlchemy object
