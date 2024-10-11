@@ -7,6 +7,8 @@ app = Flask(__name__)
 
 # Replace with your actual MySQL configuration details
 
+# add small change to test ci/cd
+
 # Example usage in your SQLAlchemy config
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
 
