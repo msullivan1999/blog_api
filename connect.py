@@ -2,15 +2,11 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 from sqlalchemy import text
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-# Replace with your actual MySQL configuration details
-
-# add small change to test ci/cd
-
-# Example usage in your SQLAlchemy config
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
+load_dotenv()
 
 # Fetch database credentials from environment variables
 db_user = os.environ.get('DB_USER', 'default_user')  # Default to 'default_user' if the variable is not set
