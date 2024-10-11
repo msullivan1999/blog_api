@@ -1,31 +1,51 @@
-from flask import Blueprint, request, jsonify, session
+from flask import request, session
+from flask_restx import Namespace, Resource
 from app.models import db, BlogPost, Comment, likes
 from app.utils.decorators import require_auth
 
-likes_bp = Blueprint('likes', __name__)
+# Set up the Namespace for likes
+api = Namespace('likes', description='Operations related to liking posts and comments')
 
-@likes_bp.route('/posts/<int:post_id>/like', methods=['POST'])
-@require_auth
-def like_post(post_id):
-    user_id = session.get("user_id")
-    post = BlogPost.query.get_or_404(post_id)
+@api.route('/posts/<int:post_id>/like')
+@api.param('post_id', 'The identifier of the post')
+class LikePost(Resource):
+    @api.doc('like_post')
+    @require_auth
+    def post(self, post_id):
+        """
+        Like a blog post.
+        Accessible only to authenticated users.
+        """
+        user_id = session.get("user_id")
+        post = BlogPost.query.get_or_404(post_id)
 
-    if post.likers.filter_by(id=user_id).first():
-        return jsonify({"message": "You already liked this post"}), 400
+        if post.likers.filter_by(id=user_id).first():
+            return {"message": "You already liked this post"}, 400
 
-    db.session.execute(likes.insert().values(user_id=user_id, target_id=post.id, target_type='post'))
-    db.session.commit()
-    return jsonify({"message": "Post liked successfully!"}), 200
+        db.session.execute(
+            likes.insert().values(user_id=user_id, post_id=post.id)
+        )
+        db.session.commit()
+        return {"message": "Post liked successfully!"}, 200
 
-@likes_bp.route('/comments/<int:comment_id>/like', methods=['POST'])
-@require_auth
-def like_comment(comment_id):
-    user_id = session.get("user_id")
-    comment = Comment.query.get_or_404(comment_id)
+@api.route('/comments/<int:comment_id>/like')
+@api.param('comment_id', 'The identifier of the comment')
+class LikeComment(Resource):
+    @api.doc('like_comment')
+    @require_auth
+    def post(self, comment_id):
+        """
+        Like a comment.
+        Accessible only to authenticated users.
+        """
+        user_id = session.get("user_id")
+        comment = Comment.query.get_or_404(comment_id)
 
-    if comment.likers.filter_by(id=user_id).first():
-        return jsonify({"message": "You already liked this comment"}), 400
+        if comment.likers.filter_by(id=user_id).first():
+            return {"message": "You already liked this comment"}, 400
 
-    db.session.execute(likes.insert().values(user_id=user_id, target_id=comment.id, target_type='comment'))
-    db.session.commit()
-    return jsonify({"message": "Comment liked successfully!"}), 200
+        db.session.execute(
+            likes.insert().values(user_id=user_id, comment_id=comment.id)
+        )
+        db.session.commit()
+        return {"message": "Comment liked successfully!"}, 200

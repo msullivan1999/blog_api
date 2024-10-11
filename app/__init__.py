@@ -3,6 +3,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_dance.contrib.google import make_google_blueprint
 from dotenv import load_dotenv
+from flask_restx import Api
 import os
 
 # Initialize SQLAlchemy
@@ -36,6 +37,10 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Set up Flask-RESTx API
+    api = Api(app, version='1.0', title='Blog API',
+    description='A simple Flask Blog API with Swagger documentation',
+    doc='/docs')  # Swagger UI available at /docs
 
     # Register Google OAuth blueprint
     google_bp = make_google_blueprint(
@@ -46,19 +51,19 @@ def create_app():
     )
     app.register_blueprint(google_bp, url_prefix="/login")
 
-    # Register blueprints
-    from app.routes.auth import auth_bp
-    from app.routes.users import users_bp
-    from app.routes.posts import posts_bp
-    from app.routes.comments import comments_bp
-    from app.routes.likes import likes_bp
-    from app.routes.tables import tables_bp
+    # Register namespaces
+    from app.routes.auth import api as auth_ns
+    from app.routes.users import api as users_ns
+    from app.routes.posts import api as posts_ns
+    from app.routes.comments import api as comments_ns
+    from app.routes.likes import api as likes_ns
+    from app.routes.tables import api as tables_ns
 
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(users_bp, url_prefix="/users")
-    app.register_blueprint(posts_bp, url_prefix="/posts")
-    app.register_blueprint(comments_bp, url_prefix="/comments")
-    app.register_blueprint(likes_bp, url_prefix="/likes")
-    app.register_blueprint(tables_bp, url_prefix="/tables")
+    api.add_namespace(auth_ns, path='/auth')
+    api.add_namespace(users_ns, path='/users')
+    api.add_namespace(posts_ns, path='/posts')
+    api.add_namespace(comments_ns, path='/comments')
+    api.add_namespace(likes_ns, path='/likes')
+    api.add_namespace(tables_ns, path='/tables')
 
     return app
