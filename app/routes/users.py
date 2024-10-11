@@ -35,3 +35,16 @@ def get_users():
         return jsonify(users_list), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@users_bp.route('/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    """
+    Get a single user based on the user ID.
+    Accessible to everyone (no authentication required).
+    """
+    try:
+        user = User.query.get_or_404(user_id)
+        user_data = {"id": user.id, "name": user.name, "email": user.email}
+        return jsonify(user_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
