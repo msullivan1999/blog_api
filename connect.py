@@ -2,24 +2,22 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
 from sqlalchemy import text
+import argparse
 
 app = Flask(__name__)
 
 # Replace with your actual MySQL configuration details
 
-# add small change to test ci/cd
+parser = argparse.ArgumentParser(description="Run Flask with MySQL credentials")
+parser.add_argument('--db_user', required=True, help='MySQL database user')
+parser.add_argument('--db_password', required=True, help='MySQL database password')
+parser.add_argument('--db_host', required=True, help='MySQL database host')
+parser.add_argument('--db_name', required=True, help='MySQL database name')
 
-# Example usage in your SQLAlchemy config
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
-
-# Fetch database credentials from environment variables
-db_user = os.environ.get('DB_USER', 'default_user')  # Default to 'default_user' if the variable is not set
-db_password = os.environ.get('DB_PASSWORD', 'default_password')
-db_host = os.environ.get('DB_HOST', 'localhost')  # Replace 'localhost' with your default host if needed
-db_name = os.environ.get('DB_NAME', 'default_db')
+args = parser.parse_args()
 
 # Configuring SQLAlchemy with MySQL connection using PyMySQL
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_user}:{db_password}@{db_host}/{db_name}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{args.db_user}:{args.db_password}@{args.db_host}/{args.db_name}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable Flask-SQLAlchemy event system
 
 # Initialize the SQLAlchemy object
