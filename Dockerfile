@@ -17,4 +17,4 @@ EXPOSE 8080
 ENV FLASK_APP=connect.py
 
 # Run the Flask app when the container launches
-ENTRYPOINT ["python3", "run.py"]
+CMD ["gunicorn", "-w", "4", "-b", "127.0.0.1:8080", "run:app"]
